@@ -387,6 +387,19 @@ export default function Scanner() {
     setIsPlaying(false);
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+    }
+  };
+
   const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setLanguage(e.target.value);
   };
@@ -540,7 +553,16 @@ export default function Scanner() {
               </div>
               <div>
                 <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-bold">Barcode</span>
-                <p className="text-sm font-semibold text-zinc-300 mt-0.5 font-mono truncate">{scannedResult?.text}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <p className="text-sm font-semibold text-zinc-300 font-mono truncate flex-1">{scannedResult?.text}</p>
+                  <button
+                    onClick={() => copyToClipboard(scannedResult?.text || '')}
+                    className="p-1.5 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors shrink-0"
+                    title="Copy barcode"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-zinc-400" />
+                  </button>
+                </div>
               </div>
             </div>
 

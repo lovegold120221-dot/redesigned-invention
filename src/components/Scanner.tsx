@@ -199,6 +199,18 @@ export default function Scanner() {
     }
   };
 
+  const speakBrowser = (text: string, lang: string) => {
+    return new Promise<void>((resolve) => {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = lang || 'en';
+      utterance.rate = 1.0;
+      utterance.onend = () => resolve();
+      utterance.onerror = () => resolve();
+      speechSynthesis.speak(utterance);
+      resolve();
+    });
+  };
+
   const speakText = async (text: string, lang: string) => {
     try {
       setIsPlaying(true);
@@ -207,24 +219,28 @@ export default function Scanner() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, language: lang }),
       });
-      if (!response.ok) throw new Error('TTS request failed');
-      const data = await response.json();
 
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
+      if (response.ok) {
+        const data = await response.json();
+        if (audioRef.current) {
+          audioRef.current.pause();
+          audioRef.current = null;
+        }
+        const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
+        audioRef.current = audio;
+        audio.onended = () => setIsPlaying(false);
+        audio.onerror = () => {
+          setIsPlaying(false);
+          console.error('Audio playback error');
+        };
+        await audio.play();
+        return;
       }
 
-      const audio = new Audio(`data:audio/mp3;base64,${data.audioContent}`);
-      audioRef.current = audio;
-      audio.onended = () => setIsPlaying(false);
-      audio.onerror = () => {
-        setIsPlaying(false);
-        console.error('Audio playback error');
-      };
-      await audio.play();
-    } catch (e) {
-      console.error('TTS playback error:', e);
+      throw new Error('Server TTS unavailable');
+    } catch {
+      console.log('Falling back to browser speech synthesis');
+      await speakBrowser(text, lang);
       setIsPlaying(false);
     }
   };
@@ -234,6 +250,7 @@ export default function Scanner() {
       audioRef.current.pause();
       audioRef.current = null;
     }
+    speechSynthesis.cancel();
     setIsPlaying(false);
   };
 

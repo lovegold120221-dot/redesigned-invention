@@ -34,17 +34,28 @@ app.post('/api/search', async (req, res) => {
 
     const prompt = `A product was scanned with barcode: ${barcode}. Search Google to identify what product this barcode belongs to. Provide concise, helpful documentation about the product: what it is, its common uses, manufacturer, and any relevant details. ${langInstruction}. If you cannot identify the product, say "${FALLBACK_MESSAGE}"`;
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      tools: [{ googleSearch: {} }],
-    });
+    let response;
+    try {
+      response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        config: {
+          tools: [{ googleSearch: {} }],
+        },
+      });
+    } catch {
+      response = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      });
+    }
 
     const text = response.text || FALLBACK_MESSAGE;
+    console.log(`Search for barcode ${barcode}: ${text.substring(0, 100)}...`);
     res.json({ text });
   } catch (error: any) {
-    console.error('Search error:', error);
-    res.status(500).json({ error: 'Search failed', detail: error?.message });
+    console.error('Search error:', error?.message || error);
+    res.status(500).json({ error: 'Search failed', detail: error?.message || String(error) });
   }
 });
 

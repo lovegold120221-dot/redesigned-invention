@@ -88,6 +88,7 @@ app.post('/api/tts', async (req, res) => {
 });
 
 function getVoiceForLanguage(lang: string): string {
+  if (lang === 'nl-BE') return 'nl-BE-Wavenet-A';
   const base = lang.split('-')[0];
   const voiceMap: Record<string, string> = {
     en: 'en-US-Neural2-J',

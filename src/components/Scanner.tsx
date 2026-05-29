@@ -154,6 +154,7 @@ export default function Scanner() {
   const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const hasTriggeredSearch = useRef(false);
+  const torchEnabledRef = useRef(false);
 
   useEffect(() => {
     Html5Qrcode.getCameras().then(availableDevices => {
@@ -260,9 +261,8 @@ export default function Scanner() {
     }
 
     const config = {
-      fps: 15,
+      fps: 30,
       qrbox: { width: 288, height: 180 },
-      aspectRatio: 1.0,
       formatsToSupport: [
         Html5QrcodeSupportedFormats.EAN_13,
         Html5QrcodeSupportedFormats.EAN_8,
@@ -318,7 +318,25 @@ export default function Scanner() {
         },
         () => {}
       );
+
       setIsScanning(true);
+
+      try {
+        const capabilities = html5QrCodeRef.current.getRunningTrackCameraCapabilities();
+        const torch = capabilities.torchFeature();
+        if (torch.isSupported()) {
+          await torch.apply(true);
+          torchEnabledRef.current = true;
+        }
+      } catch (e) {
+        console.warn('Torch not available:', e);
+      }
+
+      try {
+        html5QrCodeRef.current.applyVideoConstraints({ focusMode: 'continuous' });
+      } catch (e) {
+        console.warn('Continuous focus not available:', e);
+      }
     } catch (err) {
       console.error("Failed to start scanning:", err);
       stopScanning();
@@ -326,6 +344,18 @@ export default function Scanner() {
   };
 
   const stopScanning = async () => {
+    if (torchEnabledRef.current && html5QrCodeRef.current) {
+      try {
+        const capabilities = html5QrCodeRef.current.getRunningTrackCameraCapabilities();
+        const torch = capabilities.torchFeature();
+        if (torch.isSupported()) {
+          await torch.apply(false);
+        }
+      } catch (e) {
+        console.warn('Failed to turn off torch:', e);
+      }
+      torchEnabledRef.current = false;
+    }
     if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
       try {
         await html5QrCodeRef.current.stop();

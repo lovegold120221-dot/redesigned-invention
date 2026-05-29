@@ -37,7 +37,7 @@ app.post('/api/search', async (req, res) => {
     let response;
     try {
       response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-lite',
+        model: 'gemini-flash-lite-latest',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           tools: [{ googleSearch: {} }],
@@ -45,7 +45,7 @@ app.post('/api/search', async (req, res) => {
       });
     } catch {
       response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash-lite',
+        model: 'gemini-flash-lite-latest',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
       });
     }

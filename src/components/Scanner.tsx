@@ -350,7 +350,7 @@ export default function Scanner() {
       <header className="w-full max-w-md px-4 py-3 flex items-center justify-between border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-md sticky top-0 z-50 gap-2">
         <div className="flex items-center gap-2 shrink-0">
           <ScanBarcode className="w-5 h-5 text-emerald-500" />
-          <span className="font-semibold tracking-wide text-xs uppercase whitespace-nowrap">Eburon AI Reader</span>
+          <span className="font-semibold tracking-wide text-xs uppercase whitespace-nowrap">Scanner</span>
         </div>
         <div className="flex items-center gap-2">
           <div className="relative">

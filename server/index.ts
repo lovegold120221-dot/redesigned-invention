@@ -32,22 +32,31 @@ app.post('/api/search', async (req, res) => {
       ? `Respond entirely in the language with code "${language}". Use that language for all text.`
       : '';
 
-    const prompt = `A product was scanned with barcode: ${barcode}. Search Google to identify what product this barcode belongs to. Provide concise, helpful documentation about the product: what it is, its common uses, manufacturer, and any relevant details. ${langInstruction}. If you cannot identify the product, say "${FALLBACK_MESSAGE}"`;
+    const prompt = `A product was scanned with barcode: ${barcode}. Search the web to identify what product this barcode belongs to. Provide concise, helpful documentation about the product: what it is, its common uses, manufacturer, and any relevant details. ${langInstruction}. If you cannot identify the product, say exactly "${FALLBACK_MESSAGE}"`;
 
     let response;
     try {
       response = await ai.models.generateContent({
-        model: 'gemini-flash-lite-latest',
+        model: 'gemini-2.0-flash',
         contents: [{ role: 'user', parts: [{ text: prompt }] }],
         config: {
           tools: [{ googleSearch: {} }],
         },
       });
     } catch {
-      response = await ai.models.generateContent({
-        model: 'gemini-flash-lite-latest',
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      });
+      try {
+        response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash',
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        });
+      } catch {
+        const webText = await simpleWebSearch(barcode);
+        const summarizePrompt = `A barcode was scanned: ${barcode}. Here is information found online:\n${webText}\n\nProvide a concise summary of what this product is. ${langInstruction}`;
+        response = await ai.models.generateContent({
+          model: 'gemini-2.0-flash',
+          contents: [{ role: 'user', parts: [{ text: summarizePrompt }] }],
+        });
+      }
     }
 
     const text = response.text || FALLBACK_MESSAGE;
@@ -97,6 +106,20 @@ app.post('/api/tts', async (req, res) => {
     res.status(500).json({ error: 'TTS failed', detail: error?.message });
   }
 });
+
+async function simpleWebSearch(barcode: string): Promise<string> {
+  try {
+    const res = await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${barcode}`);
+    if (res.ok) {
+      const data = await res.json() as any;
+      if (data.items?.length > 0) {
+        const item = data.items[0];
+        return `Title: ${item.title || ''}\nBrand: ${item.brand || ''}\nCategory: ${item.category || ''}\nDescription: ${item.description || ''}`;
+      }
+    }
+  } catch {}
+  return `Product barcode: ${barcode}. No detailed information available online.`;
+}
 
 function getVoiceForLanguage(lang: string): string {
   if (lang === 'nl-BE') return 'nl-BE-Wavenet-A';

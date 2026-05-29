@@ -1,5 +1,5 @@
 {
-  "name": "Eburon Reader",
+  "name": "Eburon AI Barcode Reader",
   "description": "Professional Barcode Scanner implemented in React using Html5Qrcode.",
   "requestFramePermissions": ["camera"],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

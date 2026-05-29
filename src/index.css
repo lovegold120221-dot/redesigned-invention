@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 @theme {
   --animate-laser-sweep: laser-sweep 2.5s infinite ease-in-out;

@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-laser-sweep: laser-sweep 2.5s infinite ease-in-out;
+  --animate-focus-ring: focus-ring 4s infinite ease-out;
+
+  @keyframes laser-sweep {
+    0%, 100% { top: 5%; opacity: 0.3; }
+    50% { top: 95%; opacity: 1; }
+  }
+
+  @keyframes focus-ring {
+    0% { transform: translate(-50%, -50%) scale(1.4); opacity: 0; border-color: #3b82f6; }
+    10% { transform: translate(-50%, -50%) scale(0.95); opacity: 0.8; border-color: #eab308; }
+    15% { transform: translate(-50%, -50%) scale(1); opacity: 1; border-color: #22c55e; border-width: 3px; }
+    30% { transform: translate(-50%, -50%) scale(1); opacity: 0; border-color: #22c55e; }
+    100% { opacity: 0; }
+  }
+}
